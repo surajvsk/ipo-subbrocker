@@ -1,0 +1,19 @@
+/* ================================
+   File: styles/globals.css
+   Description: Global CSS styles for the Next.js application.
+   Now only contains Tailwind directives and base styles.
+   ================================ */
+/* Import statements must come first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif; /* Fallback, but primarily handled by _document.js */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
