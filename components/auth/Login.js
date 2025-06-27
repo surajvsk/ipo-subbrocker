@@ -140,7 +140,8 @@ const Login = ({ onLoginSuccess }) => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8 space-y-6">
+      <div className="w-full max-w-md bg-white rounded-0 shadow-xl p-8 space-y-6">
+      <img src="https://www.arihantcapital.com/images/menu-logo.png" alt="IPO Portal Logo" className="mx-auto mb-4 h-16" />
         <h2 className="text-3xl font-bold text-center text-gray-800">
           {forgotPasswordMode ? 'Forgot Password' : 'IPO Portal Login'}
         </h2>
@@ -198,11 +199,11 @@ const Login = ({ onLoginSuccess }) => {
 
         <div className="flex flex-col gap-4">
           {!otpSent ? (
-            <Button onClick={forgotPasswordMode ? handleForgotPassword : handleLogin} disabled={loading}>
+            <Button onClick={forgotPasswordMode ? handleForgotPassword : handleLogin} className='bg-green-600' disabled={loading}>
               {loading ? 'Processing...' : (forgotPasswordMode ? 'Send OTP' : 'Login')}
             </Button>
           ) : (
-            <Button onClick={forgotPasswordMode ? handlePasswordReset : handleOtpVerification} disabled={loading}>
+            <Button onClick={forgotPasswordMode ? handlePasswordReset : handleOtpVerification} className='bg-green-600' disabled={loading}>
               {loading ? 'Verifying...' : (forgotPasswordMode ? 'Reset Password' : 'Verify OTP')}
             </Button>
           )}
