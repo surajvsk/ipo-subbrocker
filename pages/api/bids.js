@@ -7,7 +7,7 @@ import { ObjectId } from 'mongodb';
 
 export default async function handler(req, res) {
   const client = await clientPromise;
-  const db = client.db('subbrokerportal'); // Your database name
+  const db = client.db(process.env.DATABASE_NAME); // Your database name
   const collection = db.collection('bids');
 
   switch (req.method) {

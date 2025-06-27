@@ -7,7 +7,7 @@ import { ObjectId } from 'mongodb'; // Import ObjectId for querying by _id
 
 export default async function handler(req, res) {
   const client = await clientPromise;
-  const db = client.db('subbrokerportal'); // Your database name
+  const db = client.db(process.env.DATABASE_NAME); // Your database name
   const collection = db.collection('subBrokers');
 
   switch (req.method) {

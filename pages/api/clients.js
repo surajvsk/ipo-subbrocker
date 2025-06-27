@@ -1,28 +1,25 @@
-// ================================
-// File: pages/api/clients.js
-// Description: API route for managing client data in MongoDB.
-//              Includes GET, POST, PUT, DELETE operations.
-// ================================
+
 import clientPromise from '../../lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export default async function handler(req, res) {
   const client = await clientPromise;
-  const db = client.db('subbrokerportal'); // Your database name
+  const db = client.db(process.env.DATABASE_NAME); // Your database name
   const collection = db.collection('clients');
 
   switch (req.method) {
     case 'GET':
       try {
-        const { tradingCode, brokerCode } = req.query;
+        const { branchCode, brokerCode } = req.query;
         let query = {};
-        if (tradingCode) {
-          query.tradingCode = tradingCode;
+        if (branchCode) {
+          query.branchCode = branchCode;
         }
-        if (brokerCode) {
-          query.brokerCode = brokerCode;
-        }
+        // if (brokerCode) {
+        //   query.brokerCode = brokerCode;
+        // }
         const clients = await collection.find(query).toArray();
+        console.log('Fetched clients::::::', clients.length, 'records found');
         res.status(200).json(clients);
       } catch (error) {
         console.error('API Error fetching clients:', error);

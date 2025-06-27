@@ -46,7 +46,7 @@ const Sidebar = ({ userRole, onNavigate, onLogout, userId }) => {
           <Link key={item.page} href={item.page} className="w-full">
             <button
               onClick={() => onNavigate(item.page)} // This would trigger client-side page change if not full refresh
-              className="w-full text-left px-4 py-2 rounded-lg text-lg hover:bg-blue-700 transition-colors duration-200"
+              className="w-full text-left px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200"
             >
               {item.name}
             </button>

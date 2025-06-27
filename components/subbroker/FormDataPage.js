@@ -2,6 +2,7 @@
 // File: components/subbroker/FormDataPage.js
 // Description: Manages client data for sub-brokers and admin.
 //              Data fetching updated to use Next.js API routes.
+//              Table structure redesigned to match image, including inline filters.
 // ================================
 import React, { useState, useEffect } from 'react';
 import Input from '../common/Input';
@@ -14,8 +15,8 @@ import ConfirmationDialog from '../common/ConfirmationDialog';
 // For now, it's defined here for brevity since it's tightly coupled.
 const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole, upiHandlers }) => {
   const [formData, setFormData] = useState(clientData || {
-    tradingCode: '', userId: '', groupCode: '', clientName: '', panCard: '',
-    dpId: '', upiHandle: '', mobile: '', email: '',
+    clientCode: '', userId: '', groupCode: '', clientName: '', panNumber: '',
+    dpId: '', upiHandler: '', mobileNumber: '', email: '',
     bankName: '', branch: '', asbaAccount: '', brokerCode: ''
   });
   const [activeTab, setActiveTab] = useState('internal');
@@ -24,14 +25,16 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
   useEffect(() => {
     if (isNew) {
       setFormData({
-        tradingCode: '', userId: '', groupCode: '', clientName: '', panCard: '',
-        dpId: '', upiHandle: '', mobile: '', email: '',
+        clientCode: '', userId: '', groupCode: '', clientName: '', panNumber: '',
+        dpId: '', upiHandler: '', mobileNumber: '', email: '',
         bankName: '', branch: '', asbaAccount: '', brokerCode: ''
       });
       setActiveTab('internal');
     } else {
       setFormData(clientData);
-      setActiveTab(clientData?.tradingCode ? 'internal' : 'external');
+      // Determine active tab based on presence of clientCode for existing clients
+      // If clientData has clientCode, it's likely an internal user, otherwise external
+      setActiveTab(clientData?.clientCode ? 'internal' : 'external');
     }
     setErrors({});
   }, [isOpen, clientData, isNew]);
@@ -46,12 +49,12 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
     const newErrors = {};
     if (activeTab === 'external') {
       if (!formData.clientName) newErrors.clientName = 'Name is required';
-      if (!formData.panCard) newErrors.panCard = 'PAN is required';
+      if (!formData.panNumber) newErrors.panNumber = 'PAN is required';
       if (!formData.email) newErrors.email = 'Email is required';
       if (!formData.dpId) newErrors.dpId = 'DP ID is required';
-      if (!formData.upiHandle) newErrors.upiHandle = 'UPI ID is required';
+      if (!formData.upiHandler) newErrors.upiHandler = 'UPI ID is required';
     } else {
-      if (!formData.tradingCode) newErrors.tradingCode = 'Client Code is required';
+      if (!formData.clientCode) newErrors.clientCode = 'Client Code is required';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -65,14 +68,14 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
   };
 
   const handleFetchClientData = async () => {
-    if (!formData.tradingCode) {
-      setErrors(prev => ({ ...prev, tradingCode: 'Client Code is required for Fetch.' }));
+    if (!formData.clientCode) {
+      setErrors(prev => ({ ...prev, clientCode: 'Client Code is required for Fetch.' }));
       return;
     }
-    setErrors(prev => ({ ...prev, tradingCode: '' }));
+    setErrors(prev => ({ ...prev, clientCode: '' }));
     try {
-      // Simulate fetching from an API route: /api/clients?tradingCode=XYZ
-      const response = await fetch(`/api/clients?tradingCode=${formData.tradingCode}`);
+      // Simulate fetching from an API route: /api/clients?clientCode=XYZ
+      const response = await fetch(`/api/clients?clientCode=${formData.clientCode}`);
       if (!response.ok) {
         throw new Error('Failed to fetch client data.');
       }
@@ -81,13 +84,13 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
         const fetchedClient = data[0]; // Assuming it returns an array
         setFormData(prev => ({
           ...prev,
-          panCard: fetchedClient.panCard || '',
+          panNumber: fetchedClient.panNumber || '',
           clientName: fetchedClient.clientName || '',
           userId: fetchedClient.userId || '',
           groupCode: fetchedClient.groupCode || '',
           dpId: fetchedClient.dpId || '',
-          upiHandle: fetchedClient.upiHandle || '',
-          mobile: fetchedClient.mobile || '',
+          upiHandler: fetchedClient.upiHandler || '',
+          mobileNumber: fetchedClient.mobileNumber || '',
           email: fetchedClient.email || '',
           bankName: fetchedClient.bankName || '',
           branch: fetchedClient.branch || '',
@@ -98,11 +101,11 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
         setErrors({});
         alert('Client data fetched successfully!');
       } else {
-        setErrors(prev => ({ ...prev, tradingCode: 'Client not found with this code.' }));
+        setErrors(prev => ({ ...prev, clientCode: 'Client not found with this code.' }));
       }
     } catch (e) {
       console.error("Error fetching client:", e);
-      setErrors(prev => ({ ...prev, tradingCode: 'Error fetching client data.' }));
+      setErrors(prev => ({ ...prev, clientCode: 'Error fetching client data.' }));
     }
   };
 
@@ -129,27 +132,27 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
         {activeTab === 'internal' && (
           <>
             <div>
-              <label htmlFor="tradingCode" className="block text-sm font-medium text-gray-700">Client Code</label>
+              <label htmlFor="clientCode" className="block text-sm font-medium text-gray-700">Client Code</label>
               <div className="flex gap-2 mt-1">
                 <Input
                   type="text"
-                  id="tradingCode"
-                  name="tradingCode"
-                  value={formData.tradingCode}
+                  id="clientCode"
+                  name="clientCode"
+                  value={formData.clientCode}
                   onChange={handleChange}
                   className="flex-grow"
                 />
                 <Button onClick={handleFetchClientData}>Fetch PAN</Button>
               </div>
-              {errors.tradingCode && <p className="text-red-500 text-xs mt-1">{errors.tradingCode}</p>}
+              {errors.clientCode && <p className="text-red-500 text-xs mt-1">{errors.clientCode}</p>}
             </div>
             <div>
-              <label htmlFor="panCardFetched" className="block text-sm font-medium text-gray-700">PAN Card (Fetched)</label>
+              <label htmlFor="panNumberFetched" className="block text-sm font-medium text-gray-700">PAN Card (Fetched)</label>
               <Input
                 type="text"
-                id="panCardFetched"
-                name="panCardFetched"
-                value={formData.panCard}
+                id="panNumberFetched"
+                name="panNumberFetched"
+                value={formData.panNumber}
                 disabled
                 className="mt-1 bg-gray-100"
               />
@@ -173,9 +176,9 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
               {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
             </div>
             <div>
-              <label htmlFor="panCard" className="block text-sm font-medium text-gray-700">PAN <span className="text-red-500">*</span></label>
-              <Input type="text" id="panCard" name="panCard" value={formData.panCard} onChange={handleChange} className="mt-1" />
-              {errors.panCard && <p className="text-red-500 text-xs mt-1">{errors.panCard}</p>}
+              <label htmlFor="panNumber" className="block text-sm font-medium text-gray-700">PAN <span className="text-red-500">*</span></label>
+              <Input type="text" id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleChange} className="mt-1" />
+              {errors.panNumber && <p className="text-red-500 text-xs mt-1">{errors.panNumber}</p>}
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email ID <span className="text-red-500">*</span></label>
@@ -188,20 +191,20 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
               {errors.dpId && <p className="text-red-500 text-xs mt-1">{errors.dpId}</p>}
             </div>
             <div>
-              <label htmlFor="upiHandle" className="block text-sm font-medium text-gray-700">UPI ID <span className="text-red-500">*</span></label>
+              <label htmlFor="upiHandler" className="block text-sm font-medium text-gray-700">UPI ID <span className="text-red-500">*</span></label>
               <Select
-                id="upiHandle"
-                name="upiHandle"
-                value={formData.upiHandle}
+                id="upiHandler"
+                name="upiHandler"
+                value={formData.upiHandler}
                 onChange={handleChange}
                 options={[{ value: '', label: 'Select Handler' }, ...upiHandlers]}
                 className="mt-1"
               />
-              {errors.upiHandle && <p className="text-red-500 text-xs mt-1">{errors.upiHandle}</p>}
+              {errors.upiHandler && <p className="text-red-500 text-xs mt-1">{errors.upiHandler}</p>}
             </div>
             <div>
-              <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">Mobile Number</label>
-              <Input type="text" id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} className="mt-1" />
+              <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700">Mobile Number</label>
+              <Input type="text" id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} className="mt-1" />
             </div>
           </>
         )}
@@ -240,8 +243,19 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
 
 const FormDataPage = ({ userRole, onAddClick }) => {
   const [clients, setClients] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortKey, setSortKey] = useState('clientName');
+  // Consolidated search filters for each column
+  const [filters, setFilters] = useState({
+    panNumber: '',
+    fullDpId: '', // Renamed from dpId for table display
+    brokerCode: '',
+    branchCode: 'BR9251',
+    mobileNumber: '',
+    upiHandler: '', // Renamed from upiHandler for table display
+    email: '',
+    clientCode: '',
+    clientName: '' // Added for "Name" column
+  });
+  const [sortKey, setSortKey] = useState('panNumber'); // Default sort key from image
   const [sortOrder, setSortOrder] = useState('asc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -250,9 +264,13 @@ const FormDataPage = ({ userRole, onAddClick }) => {
   const [editingClient, setEditingClient] = useState(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState(null);
-  const [filterBrokerCode, setFilterBrokerCode] = useState('');
+  const [filterBranchCode, setFilterBranchCode] = useState(''); // This seems to be a global filter for admin
   const [brokers, setBrokers] = useState([]);
   const [upiHandlers, setUpiHandlers] = useState([]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default items per page
 
 
   // Fetch brokers for admin filter and UPI Handlers for ClientFormModal
@@ -286,15 +304,10 @@ const FormDataPage = ({ userRole, onAddClick }) => {
       setError('');
       try {
         let url = '/api/clients'; // Your API route for clients
-        if (userRole === 'admin' && filterBrokerCode) {
-          url += `?brokerCode=${filterBrokerCode}`;
+        // Incorporate global broker filter for admin
+        if (userRole === 'admin' && filterBranchCode) {
+          url += `?branchCode=${filterBranchCode}`;
         }
-        // In a real scenario, for subbroker, you'd filter by their logged-in brokerCode
-        // For this demo, we'll assume subbroker views all their associated clients
-        // if (userRole === 'subbroker' && loggedInBrokerCode) {
-        //   url += `?brokerCode=${loggedInBrokerCode}`;
-        // }
-
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -310,14 +323,35 @@ const FormDataPage = ({ userRole, onAddClick }) => {
     };
 
     fetchClients();
-  }, [filterBrokerCode, userRole]); // Re-fetch when filter changes or user role changes
+  }, [filterBranchCode, userRole]); // Re-fetch when filter changes or user role changes
 
 
-  const filteredClients = clients.filter(client =>
-    Object.values(client).some(value =>
-      String(value).toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+const handleFilterChange = (e) => {
+  const { name, value } = e.target;
+  setFilters(prev => ({ ...prev, [name]: value }));
+  setCurrentPage(1);
+};
+
+  const filteredClients = clients.filter(client => {
+    return Object.keys(filters).every(key => {
+      let clientValue = client[key];
+      // Special handling for DP ID and UPI ID to match the image column names
+      if (key === 'fullDpId') clientValue = client.dpId;
+      if (key === 'upiHandler') clientValue = client.upiHandler;
+      if (key === 'clientName') clientValue = client.clientName; // Map to clientName in data
+      if (key === 'panNumber') clientValue = client.panNumber;
+      if (key === 'clientCode') clientValue = client.clientCode;
+      if (key === 'email') clientValue = client.email;
+      if (key === 'mobileNumber') clientValue = client.mobileNumber;
+      if (key === 'brokerCode') clientValue = client.brokerCode;
+
+
+      if (typeof clientValue === 'string') {
+        return clientValue.toLowerCase().includes(filters[key].toLowerCase());
+      }
+      return true; // If not string or no filter, consider it a match
+    });
+  });
 
   const sortedClients = [...filteredClients].sort((a, b) => {
     const aValue = String(a[sortKey] || '').toLowerCase();
@@ -356,7 +390,6 @@ const FormDataPage = ({ userRole, onAddClick }) => {
       setEditingClient(null);
       alert("Client updated successfully!");
       // Re-fetch clients to update the table
-      // You might optimize this with local state updates if you have many clients
       fetchClients();
     } catch (e) {
       console.error("Error updating client:", e);
@@ -409,6 +442,45 @@ const FormDataPage = ({ userRole, onAddClick }) => {
     setIsDeleteConfirmOpen(true);
   };
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentClients = sortedClients.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedClients.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when items per page changes
+  };
+
+  const renderPaginationButtons = () => {
+    const pageNumbers = [];
+    // Show first two, last two, and current page +/- 1
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      if (currentPage > 3) pageNumbers.push('...');
+      if (currentPage > 2) pageNumbers.push(currentPage - 1);
+      if (currentPage !== 1 && currentPage !== totalPages) pageNumbers.push(currentPage);
+      if (currentPage < totalPages - 1) pageNumbers.push(currentPage + 1);
+      if (currentPage < totalPages - 2) pageNumbers.push('...');
+      pageNumbers.push(totalPages);
+
+      // Remove duplicates and sort
+      const uniquePageNumbers = [...new Set(pageNumbers)].sort((a, b) => {
+        if (a === '...') return 1;
+        if (b === '...') return -1;
+        return a - b;
+      });
+      return uniquePageNumbers;
+    }
+    return pageNumbers;
+  };
 
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-inner">
@@ -416,94 +488,203 @@ const FormDataPage = ({ userRole, onAddClick }) => {
         {userRole === 'admin' ? 'Admin Master Form' : 'Form Data Page'}
       </h2>
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
-        <Input
-          type="text"
-          placeholder="Search clients..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="md:w-1/4"
-        />
-        {userRole === 'admin' && (
-          <Select
-            value={filterBrokerCode}
-            onChange={(e) => setFilterBrokerCode(e.target.value)}
-            options={[{ value: '', label: 'All Brokers' }, ...brokers]}
-            className="md:w-1/4"
-          />
-        )}
-        <div className="flex gap-4 w-full md:w-auto">
-          <Button onClick={() => { setIsEditModalOpen(true); setEditingClient(null); }} className="w-full md:w-auto whitespace-nowrap">
-            <i className="fas fa-plus mr-2"></i> Create New User
-          </Button>
-          <Button onClick={() => alert('Upload File functionality is simulated.')} className="bg-green-600 hover:bg-green-700 w-full md:w-auto whitespace-nowrap">
-            <i className="fas fa-upload mr-2"></i> Upload File
-          </Button>
-          <Button onClick={() => alert('Download Records functionality is simulated.')} className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto whitespace-nowrap">
-            <i className="fas fa-download mr-2"></i> Download Excel
-          </Button>
-        </div>
+      {/* Top action buttons as per image */}
+      <div className="flex flex-wrap gap-3 mb-6 justify-start">
+        <Button onClick={() => { /* Placeholder for Fetch functionality */ }} className="bg-blue-500 hover:bg-blue-600 text-white flex items-center">
+          <i className="fas fa-sync-alt mr-2"></i> Fetch
+        </Button>
+        <Button onClick={() => { setIsEditModalOpen(true); setEditingClient(null); }} className="bg-green-500 hover:bg-green-600 text-white flex items-center">
+          <i className="fas fa-plus mr-2"></i> Create
+        </Button>
+        <Button onClick={() => alert('Export To Excel functionality is simulated.')} className="bg-purple-600 hover:bg-purple-700 text-white flex items-center">
+          <i className="fas fa-file-excel mr-2"></i> Export To Excel
+        </Button>
+        <Button onClick={() => alert('Upload File functionality is simulated.')} className="bg-orange-500 hover:bg-orange-600 text-white flex items-center">
+          <i className="fas fa-upload mr-2"></i> Upload
+        </Button>
       </div>
 
       {error && <p className="text-red-600 text-center mb-4">{error}</p>}
       {loading ? (
         <div className="text-center text-gray-600">Loading client data...</div>
       ) : (
-        <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+        <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200" style={{
+            overflowX: 'auto',
+            overflowY: 'auto',
+            maxHeight: '480px', // adjust as needed for your page
+          }}>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100">
-              <tr>
-                {['Trading code', 'User ID', 'Group Code', 'Client Name', 'PAN Card', 'DP ID', 'UPI Handle', 'Mobile Number', 'Email ID', userRole === 'admin' ? 'Broker Code' : ''].filter(Boolean).map(header => (
-                  <th
-                    key={header}
-                    onClick={() => handleSort(header.toLowerCase().replace(/ /g, ''))}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                  >
-                    {header}
-                    {sortKey === header.toLowerCase().replace(/ /g, '') && (
-                      <span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>
-                    )}
-                  </th>
-                ))}
+              <tr className='sticky top-0 z-10 bg-gray-100'>
+                <th  
+                  onClick={() => handleSort('panNumber')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Pan Number {sortKey === 'panNumber' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('dpId')} // Sort by actual data key
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Full DP ID {sortKey === 'dpId' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('brokerCode')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Broker Code {sortKey === 'brokerCode' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('mobileNumber')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Mobile {sortKey === 'mobileNumber' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('upiHandler')} // Sort by actual data key
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  UPI Id {sortKey === 'upiHandler' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('email')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Email {sortKey === 'email' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                <th
+                  onClick={() => handleSort('clientCode')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                >
+                  Trading Code {sortKey === 'clientCode' && (<span>{sortOrder === 'asc' ? ' ▲' : ' ▼'}</span>)}
+                </th>
+                {/* Actions column header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+              {/* Filter row */}
+              <tr className="bg-white">
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="panNumber"
+                    value={filters.panNumber}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter panNumber"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="fullDpId" // Use the key from filters state
+                    value={filters.fullDpId}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter DP ID"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  {userRole === 'admin' ? (
+                    <Select
+                      name="brokerCode"
+                      value={filters.brokerCode}
+                      onChange={handleFilterChange}
+                      options={[{ value: '', label: 'All' }, ...brokers]}
+                      className="w-full text-sm"
+                    />
+                  ) : (
+                    <Input
+                      type="text"
+                      name="brokerCode"
+                      value={filters.brokerCode}
+                      onChange={handleFilterChange}
+                      className="w-full text-sm"
+                      placeholder="Filter Broker Code"
+                    />
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="mobileNumber"
+                    value={filters.mobileNumber}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter Mobile"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="upiHandler" // Use the key from filters state
+                    value={filters.upiHandler}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter UPI ID"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="email"
+                    value={filters.email}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter Email"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <Input
+                    type="text"
+                    name="clientCode"
+                    value={filters.clientCode}
+                    onChange={handleFilterChange}
+                    className="w-full text-sm"
+                    placeholder="Filter Trading Code"
+                  />
+                </td>
+                <td className="px-3 py-2"></td> {/* Empty for Actions column */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedClients.map((client) => (
+              {currentClients.map((client) => (
                 <tr key={client._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.tradingCode}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.userId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.groupCode || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.clientName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.panCard}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.dpId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.upiHandle}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.mobile}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.panNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.dpId}</td> {/* dpId is Full DP ID */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.brokerCode || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.mobileNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.upiCode}{client.upiHandler}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.email}</td>
-                  {userRole === 'admin' && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.brokerCode || 'N/A'}</td>
-                  )}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.clientCode}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(client)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      className="text-blue-600 hover:text-blue-900"
                       title="Edit"
                     >
-                      <i className="fas fa-pencil-alt"></i>
+                      <i className="fas fa-pencil-alt"></i> Edit
                     </button>
                     <button
                       onClick={() => openDeleteConfirm(client)}
                       className="text-red-600 hover:text-red-900"
                       title="Delete"
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <i className="fas fa-trash-alt"></i> Delete
+                    </button>
+                    {/* "Add" button next to Delete (as seen in image) - might need clarification for its exact purpose */}
+                    <button
+                      onClick={() => { /* Specific Add logic based on deletion? Or add new? */ alert('Add functionality (contextual) is simulated.') }}
+                      className="text-green-600 hover:text-green-900"
+                      title="Add"
+                    >
+                      <i className="fas fa-plus"></i> Add
                     </button>
                   </td>
                 </tr>
               ))}
-              {sortedClients.length === 0 && (
+              {currentClients.length === 0 && (
                 <tr>
-                  <td colSpan={userRole === 'admin' ? 11 : 10} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
                     No clients found.
                   </td>
                 </tr>
@@ -512,6 +693,60 @@ const FormDataPage = ({ userRole, onAddClick }) => {
           </table>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-sm text-gray-600">
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedClients.length)} of {sortedClients.length} entries
+        </div>
+        <div className="flex items-center space-x-2">
+          <label htmlFor="itemsPerPage" className="text-sm text-gray-600">Items per page:</label>
+          <Select
+            id="itemsPerPage"
+            value={itemsPerPage}
+            onChange={handleItemsPerPageChange}
+            options={[
+              { value: 5, label: '5' },
+              { value: 10, label: '10' },
+              { value: 20, label: '20' },
+              { value: 50, label: '50' },
+            ]}
+            className="w-20 text-sm"
+          />
+        </div>
+        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            Previous
+          </button>
+          {renderPaginationButtons().map((page, index) => (
+            page === '...' ? (
+              <span key={index} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                ...
+              </span>
+            ) : (
+              <button
+                key={index}
+                onClick={() => paginate(page)}
+                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              >
+                {page}
+              </button>
+            )
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            Next
+          </button>
+        </nav>
+      </div>
+
 
       {isEditModalOpen && (
         <ClientFormModal

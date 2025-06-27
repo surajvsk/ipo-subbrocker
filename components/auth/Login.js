@@ -141,7 +141,7 @@ const Login = ({ onLoginSuccess }) => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white rounded-0 shadow-xl p-8 space-y-6">
-      <img src="https://www.arihantcapital.com/images/menu-logo.png" alt="IPO Portal Logo" className="mx-auto mb-4 h-16" />
+      <img src="/images/menu-logo.png" alt="IPO Portal Logo" className="mx-auto mb-4 h-16" />
         <h2 className="text-3xl font-bold text-center text-gray-800">
           {forgotPasswordMode ? 'Forgot Password' : 'IPO Portal Login'}
         </h2>
