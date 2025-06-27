@@ -1,10 +1,8 @@
 // ================================
-// File: components/subbroker/FormDataPage.js
-// Description: Manages client data for sub-brokers and admin.
-//              Data fetching updated to use Next.js API routes.
-//              Table structure redesigned to match image, including inline filters.
+// File: FormDataPage.js
+// Description: Form Data Page component for displaying and managing client data.
 // ================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import Select from '../common/Select';
@@ -243,7 +241,6 @@ const ClientFormModal = ({ isOpen, onClose, clientData, onSave, isNew, userRole,
 
 const FormDataPage = ({ userRole, onAddClick }) => {
   const [clients, setClients] = useState([]);
-  // Consolidated search filters for each column
   const [filters, setFilters] = useState({
     panNumber: '',
     fullDpId: '', // Renamed from dpId for table display
@@ -506,7 +503,10 @@ const handleFilterChange = (e) => {
 
       {error && <p className="text-red-600 text-center mb-4">{error}</p>}
       {loading ? (
-        <div className="text-center text-gray-600">Loading client data...</div>
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+          <p className="ml-4 text-gray-600">Loading client data...</p>
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200" style={{
             overflowX: 'auto',
@@ -700,7 +700,7 @@ const handleFilterChange = (e) => {
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedClients.length)} of {sortedClients.length} entries
         </div>
         <div className="flex items-center space-x-2">
-          <label htmlFor="itemsPerPage" className="text-sm text-gray-600">Items per page:</label>
+          <label htmlFor="itemsPerPage" className="text-sm text-gray-600">Per page:</label>
           <Select
             id="itemsPerPage"
             value={itemsPerPage}
